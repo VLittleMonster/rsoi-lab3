@@ -7,55 +7,106 @@ on:
     branches:
       - master
 jobs:
-  build:
-    name: Autograding
+  unit-tests:
+    name: UNIT Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: docker/setup-buildx-action@v2
+      - name: Set up python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Packages
+        run: pip3.10 install -r services/gateway_service/requirements.txt
 
-      # TODO build and run unit tests
+      - name: Run unit tests for loyalty service
+        run: pytest -vs services/loyalty_service/app/unit_tests/tests.py
 
-      - name: Build images
-        timeout-minutes: 10
-        run: docker compose build
-
-      - name: Run containers
-        timeout-minutes: 5
-        run: |
-          docker compose up -d
-          ./scripts/wait-script.sh
-        env:
-          WAIT_PORTS: 8080,8070,8060,8050
-
-      # TODO setup variant, service and port
-
-      - name: Run API Tests
-        timeout-minutes: 5
-        run: ./scripts/test-script.sh
-        env:
-          VARIANT: <variant>
-          SERVICE_NAME: <your service name>
-          PORT_NUMBER: <port number>
-
+      #- name: Run unit tests for payment service
+      #  run: pytest -vs services/payment_service/app/unit_tests/tests.py
+      #  
+      #- name: Run unit tests for reservation service
+      #  run: pytest -vs services/reservation_service/app/unit_tests/tests.py
+  
+  deploy:
+    name: VM Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Send project files on VM
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "services,scripts,Dockerfile,docker-compose.yml,v2"
+          target: /home/${{ secrets.SSH_USER }}/hotel_booking_system
+      
+      - name: Build and up hotel-booking-system
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /home/${{ secrets.SSH_USER }}/hotel_booking_system
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker-compose down
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi gateway_service
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi payment_service
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi loyalty_service
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker rmi reservation_service
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker-compose build
+            echo ${{ secrets.SSH_PASSWORD }} | sudo -S docker-compose up -d
+            echo ${{ secrets.SSH_PASSWORD }} | sudo ./scripts/wait-script.sh
+  
+  api-test:
+    name: API Tests
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+        
+      - uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          run: ./scripts/test-script.sh v2 loyalty_service 8050
+        #  env:
+        #    VARIANT: v2
+        #    SERVICE_NAME: loyalty_service
+        #    PORT_NUMBER: 8050
+  
       - uses: education/autograding@v1
         id: autograder
         continue-on-error: true
-
-      - name: Github auto grader mark
-        uses: Romanow/google-sheet-autograder-marker@v1.0
-        with:
-          google_token: ${{secrets.GOOGLE_API_KEY}}
-          sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
-          homework_number: 3
-          user_column: 'D'
-          column_offset: 'F'
-          mark: "'+"
-
-      - name: Stop containers
-        if: always()
-        continue-on-error: true
-        run: docker compose down -v
+  
+   #  - name: Github auto grader mark
+   #    uses: Romanow/google-sheet-autograder-marker@v1.0
+   #    with:
+   #      google_token: ${{secrets.GOOGLE_API_KEY}}
+   #      sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
+   #      homework_number: 3
+   #      user_column: 'D'
+   #      column_offset: 'F'
+   #      mark: "'+"
+   #
+  #    - name: Stop containers
+  #      if: always()
+  #      continue-on-error: true
+  #      run: docker compose down -v
