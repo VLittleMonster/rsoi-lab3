@@ -7,7 +7,7 @@ postgres_db:
 
 payment_app:
   host: "0.0.0.0"
-  external_ip: "95.163.210.40"
+  external_ip: "212.233.72.15"
   prefix: "/api/v1/payments"
   port: 8060
   log_level: "info"

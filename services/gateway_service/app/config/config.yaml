@@ -4,7 +4,7 @@ general_configs:
 
 gateway_app:
   host: "0.0.0.0"
-  external_ip: "95.163.210.40"
+  external_ip: "212.233.72.15"
   port: 8080
   prefix: "/api/v1"
   log_level: "info"
