@@ -4,7 +4,6 @@ from fastapi.openapi.utils import get_openapi
 from routers import router as GatewayRouter
 from config.config import get_settings
 
-
 def get_openapi_schema():
     if not app.openapi_schema:
         app.openapi_schema = get_openapi(
