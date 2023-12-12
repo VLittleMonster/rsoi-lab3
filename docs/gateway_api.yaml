@@ -1,0 +1,464 @@
+---
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v1
+servers:
+- url: http://localhost:8080/
+- url: http://212.233.72.15:8080/
+paths:
+  "/manage/health":
+    get:
+      tags:
+      - Gateway API
+      summary: Check Availability
+      operationId: check_availability_manage_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  "/api/v1/hotels":
+    get:
+      tags:
+      - Gateway API
+      summary: Get All Hotels
+      operationId: get_all_hotels_api_v1_hotels_get
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Page
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Size
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PaginationResponse"
+  "/api/v1/me":
+    get:
+      tags:
+      - Gateway API
+      summary: Get User Info
+      operationId: get_user_info_api_v1_me_get
+      parameters:
+      - name: X-User-Name
+        in: header
+        required: true
+        schema:
+          type: string
+          title: X-User-Name
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/UserInfoResponse"
+  "/api/v1/loyalty":
+    get:
+      tags:
+      - Gateway API
+      summary: Get Loyalty
+      operationId: get_loyalty_api_v1_loyalty_get
+      parameters:
+      - name: X-User-Name
+        in: header
+        required: true
+        schema:
+          type: string
+          title: X-User-Name
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LoyaltyInfoResponse"
+  "/api/v1/reservations":
+    get:
+      tags:
+      - Gateway API
+      summary: Get Reservations
+      operationId: get_reservations_api_v1_reservations_get
+      parameters:
+      - name: X-User-Name
+        in: header
+        required: true
+        schema:
+          type: string
+          title: X-User-Name
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/ReservationResponse"
+                title: Response 200 Get Reservations Api V1 Reservations Get
+    post:
+      tags:
+      - Gateway API
+      summary: Create Reservation
+      operationId: create_reservation_api_v1_reservations_post
+      parameters:
+      - name: X-User-Name
+        in: header
+        required: true
+        schema:
+          type: string
+          title: X-User-Name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateReservationRequest"
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CreateReservationResponse"
+        '400':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ValidationErrorResponse"
+          description: Bad Request
+  "/api/v1/reservations/{reservationUid}":
+    get:
+      tags:
+      - Gateway API
+      summary: Get Reservation By Uid
+      operationId: get_reservation_by_uid_api_v1_reservations__reservationUid__get
+      parameters:
+      - name: reservationUid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Reservationuid
+      - name: X-User-Name
+        in: header
+        required: true
+        schema:
+          type: string
+          title: X-User-Name
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ReservationResponse"
+        '404':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+          description: Not Found
+    delete:
+      tags:
+      - Gateway API
+      summary: Delete Reservation
+      operationId: delete_reservation_api_v1_reservations__reservationUid__delete
+      parameters:
+      - name: reservationUid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Reservationuid
+      - name: X-User-Name
+        in: header
+        required: true
+        schema:
+          type: string
+          title: X-User-Name
+      responses:
+        '204':
+          description: Successful Response
+        '404':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+          description: Not Found
+components:
+  schemas:
+    CreateReservationRequest:
+      properties:
+        hotelUid:
+          type: string
+          format: uuid
+          title: Hoteluid
+        startDate:
+          type: string
+          format: date
+          title: Startdate
+        endDate:
+          type: string
+          format: date
+          title: Enddate
+      type: object
+      required:
+      - hotelUid
+      - startDate
+      - endDate
+      title: CreateReservationRequest
+    CreateReservationResponse:
+      properties:
+        reservationUid:
+          type: string
+          format: uuid
+          title: Reservationuid
+        hotelUid:
+          type: string
+          format: uuid
+          title: Hoteluid
+        startDate:
+          type: string
+          format: date
+          title: Startdate
+        endDate:
+          type: string
+          format: date
+          title: Enddate
+        discount:
+          type: integer
+          title: Discount
+        status:
+          type: string
+          enum:
+          - PAID
+          - CANCELED
+          title: Status
+        payment:
+          "$ref": "#/components/schemas/PaymentInfo"
+      type: object
+      required:
+      - reservationUid
+      - hotelUid
+      - startDate
+      - endDate
+      - discount
+      - status
+      - payment
+      title: CreateReservationResponse
+    ErrorDescription:
+      properties:
+        field:
+          type: string
+          title: Field
+        error:
+          type: string
+          title: Error
+      type: object
+      required:
+      - field
+      - error
+      title: ErrorDescription
+    ErrorResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+          default: not found
+      type: object
+      title: ErrorResponse
+    HotelInfo:
+      properties:
+        hotelUid:
+          type: string
+          format: uuid
+          title: Hoteluid
+        name:
+          type: string
+          title: Name
+        fullAddress:
+          type: string
+          title: Fulladdress
+        stars:
+          type: integer
+          title: Stars
+      type: object
+      required:
+      - hotelUid
+      - name
+      - fullAddress
+      - stars
+      title: HotelInfo
+    HotelResponse:
+      properties:
+        hotelUid:
+          type: string
+          format: uuid
+          title: Hoteluid
+        name:
+          type: string
+          title: Name
+        country:
+          type: string
+          title: Country
+        city:
+          type: string
+          title: City
+        address:
+          type: string
+          title: Address
+        stars:
+          type: integer
+          title: Stars
+        price:
+          type: number
+          title: Price
+      type: object
+      required:
+      - hotelUid
+      - name
+      - country
+      - city
+      - address
+      - stars
+      - price
+      title: HotelResponse
+    LoyaltyInfoResponse:
+      properties:
+        status:
+          type: string
+          enum:
+          - BRONZE
+          - SILVER
+          - GOLD
+          title: Status
+        discount:
+          type: integer
+          title: Discount
+        reservationCount:
+          type: integer
+          title: Reservationcount
+      type: object
+      required:
+      - status
+      - discount
+      - reservationCount
+      title: LoyaltyInfoResponse
+    PaginationResponse:
+      properties:
+        page:
+          type: integer
+          title: Page
+        pageSize:
+          type: integer
+          title: Pagesize
+        totalElements:
+          type: integer
+          title: Totalelements
+        items:
+          items:
+            "$ref": "#/components/schemas/HotelResponse"
+          type: array
+          title: Items
+      type: object
+      required:
+      - page
+      - pageSize
+      - totalElements
+      - items
+      title: PaginationResponse
+    PaymentInfo:
+      properties:
+        status:
+          type: string
+          enum:
+          - PAID
+          - CANCELED
+          title: Status
+        price:
+          type: integer
+          title: Price
+      type: object
+      required:
+      - status
+      - price
+      title: PaymentInfo
+    ReservationResponse:
+      properties:
+        reservationUid:
+          type: string
+          format: uuid
+          title: Reservationuid
+        hotel:
+          "$ref": "#/components/schemas/HotelInfo"
+        startDate:
+          type: string
+          format: date
+          title: Startdate
+        endDate:
+          type: string
+          format: date
+          title: Enddate
+        status:
+          type: string
+          enum:
+          - PAID
+          - CANCELED
+          title: Status
+        payment:
+          "$ref": "#/components/schemas/PaymentInfo"
+      type: object
+      required:
+      - reservationUid
+      - hotel
+      - startDate
+      - endDate
+      - status
+      - payment
+      title: ReservationResponse
+    UserInfoResponse:
+      properties:
+        reservations:
+          items:
+            "$ref": "#/components/schemas/ReservationResponse"
+          type: array
+          title: Reservations
+        loyalty:
+          "$ref": "#/components/schemas/LoyaltyInfoResponse"
+      type: object
+      required:
+      - reservations
+      - loyalty
+      title: UserInfoResponse
+    ValidationErrorResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+        errors:
+          items:
+            "$ref": "#/components/schemas/ErrorDescription"
+          type: array
+          title: Errors
+      type: object
+      required:
+      - message
+      - errors
+      title: ValidationErrorResponse
