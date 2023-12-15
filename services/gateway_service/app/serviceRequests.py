@@ -4,27 +4,25 @@ from ReqestQueue import RequestQueue
 from fastapi.responses import Response
 
 
-async def get(url: str, headers={}, data={}, timeout=5):
+async def get(url: str, headers={}, data={}, params=None, timeout=5):
     try:
-        return CustomCircuitBreaker.send_request(url, requests.get, headers, data, timeout)
+        return CustomCircuitBreaker.send_request(url, requests.get, headers, data, params, timeout)
     except Exception as e:
         print("Exception in GET method:", e)
         return None
 
 
-async def post(url: str, headers={}, data={}, timeout=5):
+async def post(url: str, headers={}, data={}, params=None, timeout=5):
     try:
-        return requests.post(url, headers=headers, json=data, timeout=timeout)
+        return requests.post(url, headers=headers, json=data, params=params, timeout=timeout)
     except Exception as e:
         print("Exception in POST method:", e)
         return Response(status_code=503)
 
 
-async def patch(url: str, headers={}, data={}, timeout=5, is_get=False):
+async def patch(url: str, headers={}, data={}, params=None, timeout=5):
     try:
-        if is_get:
-            return CustomCircuitBreaker.send_request(url, requests.patch, headers, data, timeout)
-        return RequestQueue.add_http_request(url, requests.patch, headers=headers, data=data, timeout=timeout, repeat_num=1)
+        return RequestQueue.add_http_request(url, requests.patch, headers=headers, data=data, params=params, timeout=timeout, repeat_num=1)
     except Exception as e:
         print("url:", url)
         print("headers", str(headers))
@@ -33,9 +31,9 @@ async def patch(url: str, headers={}, data={}, timeout=5, is_get=False):
         return None
 
 
-def rollback(url: str, http_method, headers={}, data={}, timeout=5):
+def rollback(url: str, http_method, headers={}, data={}, params=None, timeout=5):
     try:
-        return RequestQueue.add_http_request(url, http_method, headers=headers, data=data, timeout=timeout)
+        return RequestQueue.add_http_request(url, http_method, headers=headers, data=data, params=params, timeout=timeout)
     except Exception as e:
         print("url:", url)
         print("headers", str(headers))

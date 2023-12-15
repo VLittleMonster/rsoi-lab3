@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Header, Response, Request
+from fastapi import APIRouter, Depends, status, Header, Response, Request, Query
 from sqlalchemy.orm import Session
 from database.AppDatabase import AppDatabase
 from config.config import get_settings
@@ -19,11 +19,11 @@ async def check_availability():
     return Response(status_code=status.HTTP_200_OK)
 
 
-@router.patch(f'{settings["prefix"]}', status_code=status.HTTP_200_OK,
+@router.get(f'{settings["prefix"]}', status_code=status.HTTP_200_OK,
             responses={
                 status.HTTP_200_OK: ResponsesEnum.PaymentInfo.value
             })
-async def get_payments(data: list[PaymentUids] = None, db: Session = Depends(app_db.get_db)):
+async def get_payments(data: list[str] = Query(None), db: Session = Depends(app_db.get_db)):       # PaymentUids
     payments = await PaymentService.get_payments(data, db)
     return payments
 

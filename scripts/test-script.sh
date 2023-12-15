@@ -51,7 +51,6 @@ step() {
   printf "=== Step %d completed ===\n" "$step"
 }
 
-
 start=$(date +%s)
 trap 'timed $start' EXIT
 

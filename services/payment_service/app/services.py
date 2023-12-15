@@ -6,12 +6,12 @@ from fastapi import status
 from fastapi.exceptions import HTTPException
 from uuid import UUID
 
-async def get_payments(data: list[PaymentUids], db: Session) -> list:
+async def get_payments(data: list[str], db: Session) -> list:       # PaymentUids
     payments = []
 
     for id in data:
         try:
-            payment = db.query(Payment).filter(Payment.payment_uid == id.uid).first()
+            payment = db.query(Payment).filter(Payment.payment_uid == id).first()       # uid
         except:
             return list()
         payments.append(payment.get_payment_info())

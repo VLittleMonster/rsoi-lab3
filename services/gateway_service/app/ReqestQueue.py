@@ -37,13 +37,13 @@ class RequestQueue:
     _req_sender: Thread = None
 
     @staticmethod
-    def add_http_request(url: str, http_method, headers={}, data={}, timeout=5, repeat_num=0):
+    def add_http_request(url: str, http_method, headers={}, data={}, params=None, timeout=5, repeat_num=0):
         resp = requests.Response()
         resp.status_code = 503
         if repeat_num > 0:
             for i in range(repeat_num):
                 try:
-                    resp = http_method(url, headers=headers, json=data, timeout=timeout)
+                    resp = http_method(url, headers=headers, json=data, params=params, timeout=timeout)
                 except Exception:
                     pass
                 if resp is not None and resp.status_code <= 500:

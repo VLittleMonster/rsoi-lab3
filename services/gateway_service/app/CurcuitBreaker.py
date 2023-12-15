@@ -15,7 +15,7 @@ class CustomCircuitBreaker:
     _waiter: Thread = None
 
     @staticmethod
-    def send_request(url: str, http_method, headers={}, data={}, timeout=5):
+    def send_request(url: str, http_method, headers={}, data={}, params=None, timeout=5):
         resp = requests.Response()
         resp.status_code = 503
         if http_method is None:
@@ -31,7 +31,7 @@ class CustomCircuitBreaker:
 
         for i in range(CustomCircuitBreaker.FAILURE_THRESHOLD + 1):
             try:
-                resp = http_method(url, headers=headers, json=data, timeout=timeout)
+                resp = http_method(url, headers=headers, json=data, params=params, timeout=timeout)
             except Exception:
                 pass
 

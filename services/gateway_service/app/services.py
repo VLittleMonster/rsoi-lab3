@@ -52,9 +52,11 @@ async def get_reservations(username: str):
     reservation_responses = resp.json()
     pay_uuids = []
     for res in reservation_responses:
-        pay_uuids.append({'uid': res['paymentUid']})
+        pay_uuids.append(res['paymentUid'])
     print(pay_uuids)
-    resp = await serviceRequests.patch(url_payment_serv, data=pay_uuids, is_get=True)
+    params = {'data': pay_uuids}
+    resp = await serviceRequests.get(url_payment_serv, params=params)
+    print(resp.url)
     print(resp)
 
     payment_responses = []
@@ -91,7 +93,8 @@ async def get_reservation_by_uid(reservaionUid: UUID, username: str):
             return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=schemas.ErrorResponse().model_dump())
 
     reservation_response = reservation_response.json()
-    resp = await serviceRequests.patch(url_payment_serv, data=[{"uid": reservation_response["paymentUid"]}], is_get=True)
+    params = {'data': [reservation_response["paymentUid"]]}
+    resp = await serviceRequests.get(url_payment_serv, params=params)
 
     payment = None
     if resp is not None and resp.status_code == status.HTTP_200_OK:
@@ -101,6 +104,7 @@ async def get_reservation_by_uid(reservaionUid: UUID, username: str):
             price=payment_response[0]['price']
         )
     else:
+        print(resp.url)
         print(resp)
 
     return schemas.ReservationResponse(
